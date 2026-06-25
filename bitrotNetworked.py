@@ -1,4 +1,5 @@
-from hackmudChatAPI import ChatAPI
+from hackmudChatAPI import ChatAPI, ChatMessage
+from time import sleep
 
 
 class InvalidMove(Exception):
@@ -40,17 +41,17 @@ class Networking(ChatAPI):
         self.in_game = False
         self.allChats = self.read(600)
         self.waiting = False
-        self.curr_user = None
+        self.curr_user = ""
 
     def fetch(
         self,
         seconds: int | float = 10,
-    ):
-        fetched: dict[str, list]
+    ) -> dict[str, dict[str, list[ChatMessage]]]:
+        fetched: dict[str, list[ChatMessage]]
 
         fetched = self.read(after=seconds)
 
-        newChats: dict[str, list[dict]] = {}.copy()
+        newChats: dict[str, list[ChatMessage]] = {}.copy()
         for user in fetched:
             fetched[user].sort(key=lambda message: message["t"])
             newChats[user] = []
@@ -72,15 +73,39 @@ class Networking(ChatAPI):
         else:
             return False
 
-    def listen_challenge(self, challenged: str | None = None):
+    def listen_challenge(self, challenged: str | None = None) -> bool | str | None:
         """Listen for challenge requests and responses.
 
         Args:
             challenged (str | None, optional): User a challenge has been sent to. Defaults to None.
         """
-        pass
 
-    def listen_game(self, opponent: str):
+        if challenged is not None:
+            state = {"accepted": False}
+            loops = 0
+            while True:
+                new = self.fetch(60)["new"][self.curr_user]
+                for message in new:
+                    if message["from_user"] == challenged:
+                        if message["msg"] in ["OCC", "DEC"]:
+                            print("declined")
+                            return False
+                        if message["msg"] in ["ACC"]:
+                            print("accepted")
+                            state["accepted"] = True
+                            break
+                if state["accepted"]:
+                    break
+                if loops >= 60:
+                    self.tell(self.curr_user, challenged, "BAH")
+                    return False
+                loops += 1
+                sleep(2)
+            if state["accepted"]:
+                # start match
+                ...
+
+    def listen_game(self, opponent: str) -> str | None:
         """Listen for game state updates/opponents move
 
         Args:
