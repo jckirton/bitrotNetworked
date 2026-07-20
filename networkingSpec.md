@@ -75,8 +75,12 @@ and should be impossible to reach in a game.
 | `fffffffffff0` | Fatal client exception occurred (no recovery). | Sending client experienced a fatal exception. The match is to be discarded - no win/loss.                                                                            |
 | `fffffffffff1` | Fatal client exception occurred (recovery).    | Sending client experienced a fatal exception, but believes it can recover and continue playing. Recieving client will reset its match timeout, and behave as normal. |
 | `f000000000fc` | Provide game state.                            | Sending client is requesting current game state. Recieving client will respond with its current game state.                                                          |
+| `f000000000fb` | Timeout reached.                               | Recieving client took too long to make a move, and the sending client is declaring the match as dead.                                                                |
+<!-- | `f0000000002a` | 42                                             | 42                                                                                                                                                                   | -->
 
 ## Challenging (requesting & starting a game)
+
+### Terms
 
 - `CHA`
   - "I challenge thee!"
@@ -90,6 +94,10 @@ and should be impossible to reach in a game.
   - "I am currently occupied."
 - `BAH`
   - "I grow tired of waiting. The challenge is null."
+
+### Notes
+
+After accepting a challenge with `ACC`, the challenged should generate and send an initial game state with "playing" set to `0`.
 
 `BAH` invalidates a pending challenge.
 

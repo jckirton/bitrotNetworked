@@ -4,7 +4,7 @@ A redux of my tic tac toe game, now using objects!
 
 from time import sleep
 from copy import copy
-from .classes import InvalidMove
+from classes import InvalidMove
 
 DEFAULT = """7    |8    |9
   %s  |  %s  |  %s
