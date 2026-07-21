@@ -529,10 +529,8 @@ class Match:
             self.game.playing = True
             self.network.in_game = True
 
-    def send_state(self) -> ChatAPI.Response:
+    def send_state(self) -> Networking.Response:
         return self.network.tell(self.user, self.opponent, format(self.game))
-
-    def play(self): ...
 
 
 # foo = Game.Board()
