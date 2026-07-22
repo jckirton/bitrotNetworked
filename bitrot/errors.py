@@ -5,6 +5,7 @@ __all__ = [
     "Forfeit",
     "UnknownState",
     "DesyncError",
+    "GameAbort",
 ]
 
 

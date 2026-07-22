@@ -97,9 +97,9 @@ def attacker_match(opponent: str, initial_state: str) -> int:
         current_match.send_state()
         print("\nForfeit sent - exiting.")
         quit()
-    except Exception:
+    except Exception as e:
         network.tell(network.curr_user, opponent, "fffffffffff0")
-        quit()
+        raise e
 
 
 def defender_match(opponent: str) -> int:
@@ -134,9 +134,9 @@ def defender_match(opponent: str) -> int:
         current_match.send_state()
         print("\nForfeit sent - exiting.")
         quit()
-    except Exception:
+    except Exception as e:
         network.tell(network.curr_user, opponent, "fffffffffff0")
-        quit()
+        raise e
 
 
 while True:

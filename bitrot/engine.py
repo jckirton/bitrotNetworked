@@ -206,7 +206,7 @@ class Game:
         net_board = net_state[1:10]
         net_p = net_state[10]
         net_op = net_state[11]
-        print(net_playing, net_board, net_p, net_op)
+        # print(net_playing, net_board, net_p, net_op)
 
         if net_playing == "0":
             print("Initial board state recieved; applying state.")
@@ -219,6 +219,9 @@ class Game:
             temp_state.do_turn(int(net_p), net_op)
 
             if net_board != format(temp_state.board):
+                if net_op == "f":
+                    raise Forfeit("opponent forfeit during local turn.")
+                    self.do_turn(int(net_p), net_op)
                 print(f"Board state mismatch; game state reverted to '{format(self)}'.")
                 raise DesyncError(
                     f"board state mismatch - game state reverted to '{format(self)}'."
@@ -227,6 +230,9 @@ class Game:
                 if not self.playing:
                     self.playing = True
                 self.do_turn(int(net_p), net_op)
+        else:
+            if net_state in ["fffffffffff0", "fffffffffff1"]:
+                raise GameAbort("opposing client experienced a fatal exception.")
 
     @staticmethod
     def instance_from_state(state: str) -> Game:
