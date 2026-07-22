@@ -59,7 +59,7 @@ def input_with_timer(
         raise error
 
 
-def display(board: Game.Board, winner: int):
+def display_win(board: Game.Board, winner: int):
     print_clear(
         f"{str(board)}\n\n{["attacker", "defender"][winner]} wins.\nPress enter to return to main menu."
     )
@@ -74,11 +74,12 @@ def attacker_match(opponent: str, initial_state: str) -> int:
                 f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
             )
         )
+        print_clear(current_match.game.board)
         current_match.send_state()
         win_check = current_match.game.check_win()
         if win_check is not None:
             network.in_game = False
-            display(current_match.game.board, win_check)
+            display_win(current_match.game.board, win_check)
             return win_check
 
         print_clear(f"{str(current_match.game.board)}\n\nWaiting for opponent move...")
@@ -86,7 +87,7 @@ def attacker_match(opponent: str, initial_state: str) -> int:
         win_check = current_match.game.check_win()
         if win_check is not None:
             network.in_game = False
-            display(current_match.game.board, win_check)
+            display_win(current_match.game.board, win_check)
             return win_check
 
 
@@ -99,7 +100,7 @@ def defender_match(opponent: str) -> int:
         win_check = current_match.game.check_win()
         if win_check is not None:
             network.in_game = False
-            display(current_match.game.board, win_check)
+            display_win(current_match.game.board, win_check)
             return win_check
 
         current_match.do_self_turn(
@@ -107,11 +108,12 @@ def defender_match(opponent: str) -> int:
                 f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
             )
         )
+        print_clear(current_match.game.board)
         current_match.send_state()
         win_check = current_match.game.check_win()
         if win_check is not None:
             network.in_game = False
-            display(current_match.game.board, win_check)
+            display_win(current_match.game.board, win_check)
             return win_check
 
 
