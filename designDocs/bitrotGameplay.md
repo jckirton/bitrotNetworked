@@ -35,8 +35,8 @@ A turn of bitrot and its resolution has the following process:
 
 - Get player input
 - Check move validity
-- Place piece if valid
 - Age that player's pieces
+- Place piece if valid
 - Check win condition
 
 Turns alternate between attacker and defender until the game ends.
