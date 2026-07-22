@@ -74,7 +74,7 @@ def attacker_match(opponent: str, initial_state: str) -> int:
                 f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
             )
         )
-        print_clear(current_match.game.board)
+        print_clear(f"{str(current_match.game.board)}\n\nSending move...")
         current_match.send_state()
         win_check = current_match.game.check_win()
         if win_check is not None:
@@ -108,7 +108,7 @@ def defender_match(opponent: str) -> int:
                 f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
             )
         )
-        print_clear(current_match.game.board)
+        print_clear(f"{str(current_match.game.board)}\n\nSending move...")
         current_match.send_state()
         win_check = current_match.game.check_win()
         if win_check is not None:

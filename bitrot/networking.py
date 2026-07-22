@@ -14,7 +14,8 @@ class Networking(ChatAPI):
         """
         super().__init__(**kwargs)
         self.in_game: bool = False
-        self.allChats: dict[str, list[ChatMessage]] = self.read(after=600, before=300)
+        self.allChats: dict[str, list[ChatMessage]] = self.read(after=600)
+        # self.allChats: dict[str, list[ChatMessage]] = self.read(after=600, before=300)
         # self.allChats: dict[str, list[ChatMessage]] = {}
         # self.waiting = False
         self.curr_user: str = ""
