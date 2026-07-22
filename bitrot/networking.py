@@ -151,22 +151,19 @@ class Networking(ChatAPI):
                 for message in new:
                     if message["from_user"] == challenged:
                         if message["msg"] in ["OCC", "DEC"]:
-                            print("declined")
+                            # print("declined")
                             return None
 
                         if state["accepted"]:
                             init_state_test = match(
                                 r"(0)([01f]{9})([1|0]{1})([1-9]{1})", message["msg"]
                             )
-                            if (
-                                len(message["msg"]) == 12
-                                and init_state_test is not None
-                            ):
+                            if init_state_test is not None:
                                 state["initial"] = message["msg"]
                                 init_state_message = message
                                 break
                         elif message["msg"] in ["ACC"]:
-                            print("accepted")
+                            # print("accepted")
                             state["accepted"] = True
                             accepting_message = message
                 if loops >= 60:
@@ -175,8 +172,8 @@ class Networking(ChatAPI):
                 loops += 1
                 sleep(rate)
             if state["accepted"]:
-                print(accepting_message)
-                print(init_state_message)
+                # print(accepting_message)
+                # print(init_state_message)
                 return init_state_message["msg"]
             else:
                 return None
@@ -184,11 +181,42 @@ class Networking(ChatAPI):
             self.tell(self.curr_user, challenged, "BAH")
             return None
 
-    def listen_game(self, opponent: str) -> str | None:
+    def listen_opponent_move(
+        self, opponent: str, rate: int | float = 2, timeout: int = 150
+    ) -> str:
         """Listen for game state updates/opponent's move
+
+        Continually fetches messages every `rate` seconds,
+        and filters through messages sent to `self.curr_user` from `opponent` until a game state is recieved,
+        and returns the recieved state string.
+
+        Raises a TimeoutError after roughly 5 minutes of no state being recieved.
 
         Args:
             opponent (str): The current opponent.
+            rate (int | float, optional): How frequently to read from the chat API in seconds. Defaults to 2.
         """
-        while True:
-            self.fetch(300)
+        from time import sleep
+        from re import match
+
+        # GAME_STATE_REGEX = r"([0-f]{1})([01-3f-d]{9})([01f]{1})([0-cf]{1})"
+        GAME_STATE_REGEX = r"([0-f]{1})([0-f]{9})([0-f]{1})([0-f]{1})"
+
+        loops = 0
+        while not loops >= timeout:
+            new = self.fetch(300)["new"][self.curr_user]
+            for message in new:
+                state_regex_match = match(GAME_STATE_REGEX, message["msg"])
+                if (
+                    message["from_user"] == opponent
+                    and message.get("to_user") == self.curr_user
+                    and state_regex_match is not None
+                ):
+                    # return message["msg"]
+                    return state_regex_match.group()
+            # if loops >= timeout:
+            #     raise TimeoutError("opponent response timeout reached.")
+            loops += 1
+            sleep(rate)
+
+        raise TimeoutError("opponent response timeout reached.")

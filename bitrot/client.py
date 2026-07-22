@@ -1,4 +1,7 @@
 from .networking import Networking
 from .engine import Match
 
-network = Networking()
+
+class Client:
+    def __init__(self, network: Networking):
+        self.network = network

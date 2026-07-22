@@ -162,34 +162,34 @@ class Game:
                 return prospecting_winner.p
         return None
 
-    def do_turn(self, player, op):
-        self.recent_player = player
-        self.recent_op = op
+    def do_turn(self, player: int, op: str):
+        self.recent_player: str = str(player)
+        self.recent_op: str = op
         try:
             self.board.check_move(op)
             self.board.age_pieces(player)
             self.board.add_piece(player, int(op))
-            print(self.board)
+            # print(self.board)
         except OccupiedSpace as e:
             self.board.age_pieces(player)
             self.recent_op = "a"
-            print(self.board)
+            # print(self.board)
             print(e)
         except OutOfBounds as e:
             self.board.age_pieces(player)
             self.recent_op = "b"
-            print(self.board)
+            # print(self.board)
             print(e)
         except Forfeit as e:
             self.recent_op = "f"
             self.playing = False
             self.winner = abs(player - 1)
-            print(self.board)
+            # print(self.board)
             print(e)
         except InvalidMove as e:
             self.board.age_pieces(player)
             self.recent_op = "c"
-            print(self.board)
+            # print(self.board)
             print(e)
 
         win_check = self.check_win()
@@ -198,7 +198,7 @@ class Game:
             self.winner = win_check
             print(f"{self.winner} has won.")
 
-    def parse_net_state(self, net_state):
+    def parse_net_state(self, net_state: str):
         net_playing = net_state[0]
         net_board = net_state[1:10]
         net_p = net_state[10]
@@ -256,7 +256,7 @@ class Game:
         temp_game = Game()
 
         for move in moves:
-            temp_game.do_turn(0, move)
+            temp_game.do_turn(moves.index(move), str(move))
 
         return format(temp_game)
 
@@ -299,6 +299,14 @@ class Match:
             self.network.in_game = True
 
     def send_state(self) -> Networking.Response:
-        return self.network.tell(self.user, self.opponent, format(self.game))
+        # return self.network.tell(self.user, self.opponent, format(self.game))
+        return self.network.tell(
+            self.network.curr_user, self.opponent, format(self.game)
+        )
 
-    def play(self): ...
+    def do_self_turn(self, op: str):
+        self.game.do_turn(self.team, op)
+
+    def do_opponent_turn(self):
+        net_state = self.network.listen_opponent_move(self.opponent)
+        self.game.parse_net_state(net_state)
