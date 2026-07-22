@@ -135,10 +135,12 @@ while True:
             response = None
             while not challenge_sent:
                 target = input_clear(
-                    (f"'{target}' is not a user.\n" if target != "" else "")
+                    (f"'{target}' is not a valid user.\n" if target != "" else "")
                     + CHALLENGE_TARGET_PROMPT
                 )
-                challenge_sent = network.challenge(user, target)
+                challenge_sent = (
+                    False if user == target else network.challenge(user, target)
+                )
 
             print_clear(f"Awaiting response from '{target}'...")
             response = network.listen_challenge_response(target)
