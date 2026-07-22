@@ -135,6 +135,9 @@ class Game:
             return format(self) == format(value)
 
     def check_win(self) -> int | None:
+        if self.recent_op == "f":
+            return self.winner
+
         win_conditions = [
             [1, 2, 3],
             [4, 5, 6],
@@ -174,23 +177,23 @@ class Game:
             self.board.age_pieces(player)
             self.recent_op = "a"
             # print(self.board)
-            print(e)
+            # print(e)
         except OutOfBounds as e:
             self.board.age_pieces(player)
             self.recent_op = "b"
             # print(self.board)
-            print(e)
+            # print(e)
         except Forfeit as e:
             self.recent_op = "f"
             self.playing = False
             self.winner = abs(player - 1)
             # print(self.board)
-            print(e)
+            # print(e)
         except InvalidMove as e:
             self.board.age_pieces(player)
             self.recent_op = "c"
             # print(self.board)
-            print(e)
+            # print(e)
 
         win_check = self.check_win()
         if win_check is not None:

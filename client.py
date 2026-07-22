@@ -59,62 +59,84 @@ def input_with_timer(
         raise error
 
 
-def display_win(board: Game.Board, winner: int):
+def display_win(game: Game, winner: int):
     print_clear(
-        f"{str(board)}\n\n{["attacker", "defender"][winner]} wins.\nPress enter to return to main menu."
+        f"{str(game.board)}\n\n{["attacker", "defender"][winner]} wins{f" due to {["attacker", "defender"][int(not winner)]} forfeit" if game.recent_op == "f" else ""}.\nPress enter to return to main menu."
     )
 
 
 def attacker_match(opponent: str, initial_state: str) -> int:
     current_match = Match(network, "", opponent, 0, initial_state)
 
-    while True:
-        current_match.do_self_turn(
-            input_clear(
-                f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
+    try:
+        while True:
+            current_match.do_self_turn(
+                input_clear(
+                    f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
+                )
             )
-        )
-        print_clear(f"{str(current_match.game.board)}\n\nSending move...")
-        current_match.send_state()
-        win_check = current_match.game.check_win()
-        if win_check is not None:
-            network.in_game = False
-            display_win(current_match.game.board, win_check)
-            return win_check
+            print_clear(f"{str(current_match.game.board)}\n\nSending move...")
+            current_match.send_state()
+            win_check = current_match.game.check_win()
+            if win_check is not None:
+                network.in_game = False
+                display_win(current_match.game, win_check)
+                return win_check
 
-        print_clear(f"{str(current_match.game.board)}\n\nWaiting for opponent move...")
-        current_match.do_opponent_turn()
-        win_check = current_match.game.check_win()
-        if win_check is not None:
-            network.in_game = False
-            display_win(current_match.game.board, win_check)
-            return win_check
+            print_clear(
+                f"{str(current_match.game.board)}\n\nWaiting for opponent move..."
+            )
+            current_match.do_opponent_turn()
+            win_check = current_match.game.check_win()
+            if win_check is not None:
+                network.in_game = False
+                display_win(current_match.game, win_check)
+                return win_check
+    except KeyboardInterrupt:
+        current_match.do_self_turn("f")
+        current_match.send_state()
+        print("\nForfeit sent - exiting.")
+        quit()
+    except Exception:
+        network.tell(network.curr_user, opponent, "fffffffffff0")
+        quit()
 
 
 def defender_match(opponent: str) -> int:
     current_match = Match(network, "", opponent, 1)
 
-    while True:
-        print_clear(f"{str(current_match.game.board)}\n\nWaiting for opponent move...")
-        current_match.do_opponent_turn()
-        win_check = current_match.game.check_win()
-        if win_check is not None:
-            network.in_game = False
-            display_win(current_match.game.board, win_check)
-            return win_check
-
-        current_match.do_self_turn(
-            input_clear(
-                f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
+    try:
+        while True:
+            print_clear(
+                f"{str(current_match.game.board)}\n\nWaiting for opponent move..."
             )
-        )
-        print_clear(f"{str(current_match.game.board)}\n\nSending move...")
+            current_match.do_opponent_turn()
+            win_check = current_match.game.check_win()
+            if win_check is not None:
+                network.in_game = False
+                display_win(current_match.game, win_check)
+                return win_check
+
+            current_match.do_self_turn(
+                input_clear(
+                    f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
+                )
+            )
+            print_clear(f"{str(current_match.game.board)}\n\nSending move...")
+            current_match.send_state()
+            win_check = current_match.game.check_win()
+            if win_check is not None:
+                network.in_game = False
+                display_win(current_match.game, win_check)
+                return win_check
+    except KeyboardInterrupt:
+        current_match.do_self_turn("f")
         current_match.send_state()
-        win_check = current_match.game.check_win()
-        if win_check is not None:
-            network.in_game = False
-            display_win(current_match.game.board, win_check)
-            return win_check
+        print("\nForfeit sent - exiting.")
+        quit()
+    except Exception:
+        network.tell(network.curr_user, opponent, "fffffffffff0")
+        quit()
 
 
 while True:
@@ -123,35 +145,38 @@ while True:
 
     match client_mode:
         case "1":
-            user = ""
-            while user not in network.users:
-                user = input_clear(
-                    (f"'{user}' is not one of your users.\n" if user != "" else "")
-                    + USER_SELECT_PROMPT
-                )
+            try:
+                user = ""
+                while user not in network.users:
+                    user = input_clear(
+                        (f"'{user}' is not one of your users.\n" if user != "" else "")
+                        + USER_SELECT_PROMPT
+                    )
 
-            challenge_sent = False
-            target = ""
-            response = None
-            while not challenge_sent:
-                target = input_clear(
-                    (f"'{target}' is not a valid user.\n" if target != "" else "")
-                    + CHALLENGE_TARGET_PROMPT
-                )
-                challenge_sent = (
-                    False if user == target else network.challenge(user, target)
-                )
+                challenge_sent = False
+                target = ""
+                response = None
+                while not challenge_sent:
+                    target = input_clear(
+                        (f"'{target}' is not a valid user.\n" if target != "" else "")
+                        + CHALLENGE_TARGET_PROMPT
+                    )
+                    challenge_sent = (
+                        False if user == target else network.challenge(user, target)
+                    )
 
-            print_clear(f"Awaiting response from '{target}'...")
-            response = network.listen_challenge_response(target)
+                print_clear(f"Awaiting response from '{target}'...")
+                response = network.listen_challenge_response(target)
 
-            if response is None:
-                print_clear("Challenge timed out or was declined.")
-                sleep(3)
-            else:
-                print_clear("Challenge accepted.")
-                attacker_match(target, response)
-                input()
+                if response is None:
+                    print_clear("Challenge timed out or was declined.")
+                    sleep(3)
+                else:
+                    print_clear("Challenge accepted.")
+                    attacker_match(target, response)
+                    input()
+            except KeyboardInterrupt:
+                pass
         case "2":
             challenges: list[Networking.Challenge] = []
             accepted = None

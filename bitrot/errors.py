@@ -30,3 +30,7 @@ class UnknownState(Exception):
 
 class DesyncError(UnknownState):
     """A state desync has occured."""
+
+
+class GameAbort(Exception):
+    """The current game is to be aborted."""
