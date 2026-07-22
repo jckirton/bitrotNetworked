@@ -1,5 +1,5 @@
 from bitrot.networking import Networking
-from bitrot.engine import Match
+from bitrot.engine import Match, Game
 from time import sleep
 
 network = Networking()
@@ -59,17 +59,26 @@ def input_with_timer(
         raise error
 
 
+def display(board: Game.Board, winner: int):
+    print_clear(
+        f"{str(board)}\n\n{["attacker", "defender"][winner]} wins.\nPress enter to return to main menu."
+    )
+
+
 def attacker_match(opponent: str, initial_state: str) -> int:
     current_match = Match(network, "", opponent, 0, initial_state)
 
     while True:
         current_match.do_self_turn(
-            input_clear(f"{str(current_match.game.board)}\n\nop: ")
+            input_clear(
+                f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
+            )
         )
         current_match.send_state()
         win_check = current_match.game.check_win()
         if win_check is not None:
             network.in_game = False
+            display(current_match.game.board, win_check)
             return win_check
 
         print_clear(f"{str(current_match.game.board)}\n\nWaiting for opponent move...")
@@ -77,6 +86,7 @@ def attacker_match(opponent: str, initial_state: str) -> int:
         win_check = current_match.game.check_win()
         if win_check is not None:
             network.in_game = False
+            display(current_match.game.board, win_check)
             return win_check
 
 
@@ -89,15 +99,19 @@ def defender_match(opponent: str) -> int:
         win_check = current_match.game.check_win()
         if win_check is not None:
             network.in_game = False
+            display(current_match.game.board, win_check)
             return win_check
 
         current_match.do_self_turn(
-            input_clear(f"{str(current_match.game.board)}\n\nop: ")
+            input_clear(
+                f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
+            )
         )
         current_match.send_state()
         win_check = current_match.game.check_win()
         if win_check is not None:
             network.in_game = False
+            display(current_match.game.board, win_check)
             return win_check
 
 
@@ -133,6 +147,7 @@ while True:
             else:
                 print_clear("Challenge accepted.")
                 attacker_match(target, response)
+                input()
         case "2":
             challenges: list[Networking.Challenge] = []
             accepted = None
@@ -183,6 +198,7 @@ while True:
             if accepted is not None:
                 accepted.accept()
                 defender_match(accepted.challenger)
+                input()
         case "0":
             print("Exiting BITROT client.")
             quit()
