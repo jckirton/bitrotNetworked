@@ -1,5 +1,6 @@
 from bitrot.networking import Networking
 from bitrot.engine import Match, Game
+from bitrot.errors import GameAbort
 from time import sleep
 
 network = Networking()
@@ -21,6 +22,8 @@ CHALLENGE_RESPONSE_PROMPT = """
 Would you like to accept or decline this challenge? (a/d/Return)
 
 """
+
+DEAD_OPPONENT_MESSAGE = "\nThe opposing client experienced a fatal exception - no winner.\nPress enter to return to main menu."
 
 
 def print_clear(*args, **kwargs) -> None:
@@ -65,7 +68,7 @@ def display_win(game: Game, winner: int):
     )
 
 
-def attacker_match(opponent: str, initial_state: str) -> int:
+def attacker_match(opponent: str, initial_state: str) -> int | None:
     current_match = Match(network, "", opponent, 0, initial_state)
 
     try:
@@ -97,12 +100,14 @@ def attacker_match(opponent: str, initial_state: str) -> int:
         current_match.send_state()
         print("\nForfeit sent - exiting.")
         quit()
+    except GameAbort:
+        print(DEAD_OPPONENT_MESSAGE)
     except Exception as e:
         network.tell(network.curr_user, opponent, "fffffffffff0")
         raise e
 
 
-def defender_match(opponent: str) -> int:
+def defender_match(opponent: str) -> int | None:
     current_match = Match(network, "", opponent, 1)
 
     try:
@@ -134,6 +139,8 @@ def defender_match(opponent: str) -> int:
         current_match.send_state()
         print("\nForfeit sent - exiting.")
         quit()
+    except GameAbort:
+        print(DEAD_OPPONENT_MESSAGE)
     except Exception as e:
         network.tell(network.curr_user, opponent, "fffffffffff0")
         raise e

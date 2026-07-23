@@ -66,19 +66,21 @@ class Game:
 
         def check_move(self, op: str):
             if op == "f":
-                raise Forfeit("A forfeit was declared.")
+                raise Forfeit("a forfeit was declared.")
+            if op in "0":
+                raise NullOp("a null operation was submitted.")
 
             try:
                 position = int(op)
                 piece = self.state[position]
             except ValueError:
-                raise InvalidMove("An unknown op was passed.")
+                raise InvalidMove("an unknown op was passed.")
 
             if 9 < position < 1:
-                raise OutOfBounds(f"Position '{position}' is not a space on the board.")
+                raise OutOfBounds(f"position '{position}' is not a space on the board.")
             elif piece is not None:
                 raise OccupiedSpace(
-                    f"Position {position} is occupied by the {"attacker" if piece.p == 0 else "defender"}."
+                    f"position {position} is occupied by the {"attacker" if piece.p == 0 else "defender"}."
                 )
             else:
                 return True
@@ -173,6 +175,11 @@ class Game:
             self.board.age_pieces(player)
             self.board.add_piece(player, int(op))
             # print(self.board)
+        except NullOp as e:
+            self.board.age_pieces(player)
+            self.recent_op = "0"
+            # print(self.board)
+            # print(e)
         except OccupiedSpace as e:
             self.board.age_pieces(player)
             self.recent_op = "a"

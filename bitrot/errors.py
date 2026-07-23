@@ -6,6 +6,7 @@ __all__ = [
     "UnknownState",
     "DesyncError",
     "GameAbort",
+    "NullOp",
 ]
 
 
@@ -23,6 +24,10 @@ class OutOfBounds(InvalidMove):
 
 class Forfeit(InvalidMove):
     """The invalid move was declaring a forfeit."""
+
+
+class NullOp(InvalidMove):
+    """The invalid move was a null operation."""
 
 
 class UnknownState(Exception):
