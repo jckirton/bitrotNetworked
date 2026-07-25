@@ -148,6 +148,7 @@ def defender_match(opponent: str) -> int | None:
         raise e
 
 
+challenges: list[Networking.Challenge] = []
 while True:
     network.curr_user = ""
     client_mode = input_clear(CLIENT_MODE_PROMPT)
@@ -187,7 +188,6 @@ while True:
             except KeyboardInterrupt:
                 pass
         case "2":
-            challenges: list[Networking.Challenge] = []
             accepted = None
             try:
                 while accepted is None:
@@ -241,4 +241,5 @@ while True:
             print("Exiting BITROT client.")
             quit()
         case _:
-            pass
+            print("Exiting BITROT client.")
+            quit()
