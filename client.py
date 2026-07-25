@@ -101,6 +101,7 @@ def attacker_match(opponent: str, initial_state: str) -> int | None:
         print("\nForfeit sent - exiting.")
         quit()
     except GameAbort:
+        network.in_game = False
         print(DEAD_OPPONENT_MESSAGE)
     except Exception as e:
         network.tell(network.curr_user, opponent, "fffffffffff0")
@@ -140,6 +141,7 @@ def defender_match(opponent: str) -> int | None:
         print("\nForfeit sent - exiting.")
         quit()
     except GameAbort:
+        network.in_game = False
         print(DEAD_OPPONENT_MESSAGE)
     except Exception as e:
         network.tell(network.curr_user, opponent, "fffffffffff0")
