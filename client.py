@@ -75,7 +75,7 @@ def attacker_match(opponent: str, initial_state: str) -> int | None:
         while True:
             current_match.do_self_turn(
                 input_clear(
-                    f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
+                    f"\a{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
                 )
             )
             print_clear(f"{str(current_match.game.board)}\n\nSending move...")
@@ -125,7 +125,7 @@ def defender_match(opponent: str) -> int | None:
 
             current_match.do_self_turn(
                 input_clear(
-                    f"{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
+                    f"\a{str(current_match.game.board)}\n\n{["attacker", "defender"][current_match.team]} ({current_match.team}) op: "
                 )
             )
             print_clear(f"{str(current_match.game.board)}\n\nSending move...")
