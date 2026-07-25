@@ -266,9 +266,9 @@ class Game:
 
     @staticmethod
     def generate_initial_state() -> str:
-        from random import choices
+        from random import sample
 
-        moves = choices(range(1, 10), k=2)
+        moves = sample(range(1, 10), k=2)
         temp_game = Game()
 
         for move in moves:
