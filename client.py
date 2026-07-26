@@ -42,6 +42,10 @@ def input_with_timer(
     import select
     from sys import stdout, stdin
     import time
+    from platform import system
+
+    if system() == "Windows":
+        return input_clear(prompt)
 
     if clear:
         print("\x1b[2J")
