@@ -245,5 +245,6 @@ while True:
             print("Exiting BITROT client.")
             quit()
         case _:
-            print("Exiting BITROT client.")
-            quit()
+            # print("Exiting BITROT client.")
+            # quit()
+            pass
