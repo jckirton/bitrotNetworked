@@ -1,4 +1,5 @@
 from hackmudChatAPI import ChatAPI, ChatMessage
+from typing import TypedDict
 
 __all__ = ["Networking", "ChatMessage"]
 
@@ -6,13 +7,22 @@ __all__ = ["Networking", "ChatMessage"]
 class Networking(ChatAPI):
     """BITROT's extension of the `hackmudChatAPI.ChatAPI` class."""
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        config_file: str = f"{ChatAPI.path[0]}/config.json",
+        verbosity: int = 1,
+        **kwargs,
+    ):
         """Create a BITROT networking instance.
 
         Args:
-            **kwargs: Optional arguments that `hackmudChatAPI.ChatAPI` takes.
+            config_file (str, optional): Path to the ChatAPI config file. Defaults to f"{sys.path[0]}/config.json".
+            varbosity (int, optional): The verbosity level of this ChatAPI instance.
+              `ChatAPI.log` calls with a verbosity <= to this value will appear in stdout.
+              Defaults to 1.
+            **kwargs: Additional optional arguments passed into `hackmudChatAPI.ChatAPI`.
         """
-        super().__init__(**kwargs)
+        super().__init__(config_file=config_file, verbosity=verbosity, **kwargs)
         self.in_game: bool = False
         self.allChats: dict[str, list[ChatMessage]] = self.read(after=600)
         # self.allChats: dict[str, list[ChatMessage]] = self.read(after=600, before=300)
@@ -27,35 +37,91 @@ class Networking(ChatAPI):
         """
 
         def __init__(
-            self, network: Networking, challenger: str, challenged: str, sent_at: float
+            self,
+            network: Networking,
+            challenger: str,
+            challenged: str,
+            sent_at: int | float,
         ):
+            """Create a BITROT challenge.
+
+            Args:
+                network (Networking): The active Networking instance. Used for responding to challenges.
+                challenger (str): The name of the user declaring the challenge.
+                challenged (str): The name of the user being challenged.
+                sent_at (int | float): Timestamp of when the challenge was made as seconds since the UNIX epoch.
+            """
             self.network: Networking = network
             self.challenger: str = challenger
             self.challenged: str = challenged
-            self.sent_at: float = sent_at
+            self.sent_at: int | float = sent_at
 
         @staticmethod
         def challenge_from_message(
             network: Networking, message: ChatMessage
         ) -> Networking.Challenge:
+            """Create a BITROT challenge from a ChatAPI message.
+
+            Does not look at the content of the message, only who sent and recieved it.
+
+            Args:
+                network (Networking): The active `bitrot.Networking` instance.
+                message (ChatMessage): The message to create a challenge from.
+
+            Returns:
+                Networking.Challenge: The created BITROT challenge.
+            """
             return Networking.Challenge(
                 network, message["from_user"], message.get("to_user", ""), message["t"]
             )
 
-        def accept(self):
+        def accept(self) -> None:
+            """Accept the challenge.
+
+            Sends `"ACC"` to the challenger, and sets `network.curr_user` to the challenged user.
+            """
             self.network.curr_user = self.challenged
             self.network.tell(self.challenged, self.challenger, "ACC")
 
-        def decline(self):
+        def decline(self) -> None:
+            """Decline the challenge.
+
+            Sends `"DEC"` to the challenger.
+            """
             self.network.tell(self.challenged, self.challenger, "DEC")
 
         def __repr__(self) -> str:
             return f"{self.challenger} -> {self.challenged} @ {self.sent_at}"
 
+    class FetchReturn(TypedDict):
+        """The structure of `Networking.fetch`'s return value.
+
+        Attributes:
+            fetched (dict): Literal `ChatAPI.read` return, containing all fetched chat messages.
+            new (dict): Only contains fetched messages that were not seen previously.
+        """
+
+        fetched: dict[str, list[ChatMessage]]
+        new: dict[str, list[ChatMessage]]
+
     def fetch(
         self,
         seconds: int | float = 10,
-    ) -> dict[str, dict[str, list[ChatMessage]]]:
+    ) -> FetchReturn:
+        """Fetch messages from the chat API.
+
+        Reads the last `seconds` of messages from the chat API and returns both all of the fetched messages, and just the new tells.
+        Automatically adds new tells to `self.allChats`, as that is how a message is determined to be "new".
+
+        Args:
+            seconds (int | float, optional): How many seconds ago to fetch messages from, as passed into `ChatAPI.read`'s `after` parameter. Defaults to 10.
+
+        Returns:
+            dict: A dictionary with the two keys `"fetched"` and `"new"`.
+              `"fetched"` contains the output of the `ChatAPI.read` call,
+              and `"new"` contains only tells not seen by a previous `self.fetch` call.
+              Both `"new"` and `"fetched"` have the same data structure as a `ChatAPI.read` return.
+        """
         fetched: dict[str, list[ChatMessage]]
 
         fetched = self.read(after=seconds)
@@ -74,17 +140,20 @@ class Networking(ChatAPI):
         return {"fetched": fetched, "new": newChats}
 
     def challenge(self, user: str, target: str) -> bool:
-        """Send a challenge request to `target` as `user`.
+        """Send a challenge message to `target` as `user`.
 
-        Sends `"CHA"` as a tell to `target` as `user`.
+        Sends `"CHA"` as a tell to `target` from `user`.
         If sent successfully, sets `self.curr_user` to `user` and returns `True`.
         Returns `False` otherwise.
 
         Does not listen for a response - use the `Networking.listen_challenge_response` method.
 
         Args:
-            user (str): The user to send a challenge request as.
-            target (str): The user to send a challenge request to.
+            user (str): The user to send a challenge as.
+            target (str): The user to send a challenge to.
+
+        Returns:
+            bool: If the challenge was successfully sent.
         """
 
         tell = self.tell(user, target, "CHA")
@@ -96,7 +165,7 @@ class Networking(ChatAPI):
             return False
 
     def fetch_challenges(self) -> list[Networking.Challenge]:
-        """Fetch recieved challenge requests.
+        """Return recieved challenge requests.
 
         Filters through new chat messages recieved in the last 10 minutes for `"CHA"` requests,
         and returns a list of challenges.
@@ -140,6 +209,10 @@ class Networking(ChatAPI):
         Args:
             challenged (str): User a challenge has been sent to.
             rate (int | float, optional): How frequently to read from the chat API in seconds. Defaults to 2.
+
+        Returns:
+            str: The initial game state string supplied by the challenged.
+            None: The challenge was not accepted.
         """
         from time import sleep
         from re import match
@@ -196,6 +269,9 @@ class Networking(ChatAPI):
         Args:
             opponent (str): The current opponent.
             rate (int | float, optional): How frequently to read from the chat API in seconds. Defaults to 2.
+
+        Returns:
+            str: The new game state string sent by `opponent`.
         """
         from time import sleep
         from re import match

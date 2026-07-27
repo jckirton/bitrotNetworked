@@ -3,10 +3,10 @@ __all__ = [
     "OccupiedSpace",
     "OutOfBounds",
     "Forfeit",
+    "NullOp",
     "UnknownState",
     "DesyncError",
     "GameAbort",
-    "NullOp",
 ]
 
 

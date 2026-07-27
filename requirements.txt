@@ -1,1 +1,1 @@
-hackmudChatAPI==0.0.20.6
+hackmudChatAPI==0.0.20.7
