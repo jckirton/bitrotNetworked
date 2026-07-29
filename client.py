@@ -58,7 +58,7 @@ def input_with_timer(
     if ready:
         entered = time.time()
         usrInput = stdin.readline().rstrip("\n")  # expect stdin to be line-buffered
-        time.sleep((start + 5) - entered)
+        # time.sleep((start + 5) - entered)
         return usrInput
     else:
         stdout.write("\n")
