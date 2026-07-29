@@ -37,15 +37,12 @@ def input_clear(prompt: str = "", /) -> str:
 
 
 def input_with_timer(
-    prompt: str, timer: int | float, clear: bool = True, error=TimeoutError
+    prompt: str, timeout: int | float, clear: bool = True, error=TimeoutError
 ):
     import select
-    from sys import stdout, stdin
     import time
+    from sys import stdout, stdin
     from platform import system
-
-    if system() == "Windows":
-        return input_clear(prompt)
 
     if clear:
         print("\x1b[2J")
@@ -53,17 +50,30 @@ def input_with_timer(
     stdout.write(prompt)
     stdout.flush()
 
-    start = time.time()
-    ready, _, _ = select.select([stdin], [], [], timer)
-    if ready:
-        entered = time.time()
-        usrInput = stdin.readline().rstrip("\n")  # expect stdin to be line-buffered
-        # time.sleep((start + 5) - entered)
-        return usrInput
-    else:
-        stdout.write("\n")
-        stdout.flush()
+    if system() == "Windows":
+        import msvcrt
+
+        endtime = time.monotonic() + timeout
+        result = []
+        while time.monotonic() < endtime:
+            if msvcrt.kbhit():
+                result.append(msvcrt.getwche())
+                if result[-1] == "\r":
+                    return "".join(result[:-1])
+            time.sleep(0.04)  # just to yield to other processes/threads
         raise error
+    else:
+        # start = time.time()
+        ready, _, _ = select.select([stdin], [], [], timeout)
+        if ready:
+            # entered = time.time()
+            usrInput = stdin.readline().rstrip("\n")  # expect stdin to be line-buffered
+            # time.sleep((start + 5) - entered)
+            return usrInput
+        else:
+            stdout.write("\n")
+            stdout.flush()
+            raise error
 
 
 def display_win(game: Game, winner: int):
