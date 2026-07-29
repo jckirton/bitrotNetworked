@@ -324,5 +324,12 @@ class Match:
         self.game.do_turn(self.team, op)
 
     def do_opponent_turn(self):
-        net_state = self.network.listen_opponent_move(self.opponent)
-        self.game.parse_net_state(net_state)
+        done = False
+
+        while not done:
+            net_state = self.network.listen_opponent_move(self.opponent)
+            if net_state == "f000000000fc":
+                self.send_state()
+            else:
+                self.game.parse_net_state(net_state)
+                done = True
