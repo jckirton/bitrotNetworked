@@ -41,16 +41,15 @@ def input_with_timer(
 ):
     import select
     import time
-    from sys import stdout, stdin
-    from platform import system
+    import sys
 
     if clear:
         print("\x1b[2J")
 
-    stdout.write(prompt)
-    stdout.flush()
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
 
-    if system() == "Windows":
+    if sys.platform == "win32":
         import msvcrt
 
         endtime = time.monotonic() + timeout
@@ -64,15 +63,17 @@ def input_with_timer(
         raise error
     else:
         # start = time.time()
-        ready, _, _ = select.select([stdin], [], [], timeout)
+        ready, _, _ = select.select([sys.stdin], [], [], timeout)
         if ready:
             # entered = time.time()
-            usrInput = stdin.readline().rstrip("\n")  # expect stdin to be line-buffered
+            usrInput = sys.stdin.readline().rstrip(
+                "\n"
+            )  # expect stdin to be line-buffered
             # time.sleep((start + 5) - entered)
             return usrInput
         else:
-            stdout.write("\n")
-            stdout.flush()
+            sys.stdout.write("\n")
+            sys.stdout.flush()
             raise error
 
 
